@@ -132,3 +132,5 @@ require (
 replace github.com/golangci/golangci-lint => github.com/golangci/golangci-lint v1.18.0
 
 replace github.com/filecoin-project/filecoin-ffi => ./extern/filecoin-ffi
+
+replace github.com/filecoin-project/go-fil-markets => github.com/murmuration-labs/go-fil-markets v0.3.2-0.20200702145639-4034a18364e4
