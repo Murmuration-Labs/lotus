@@ -5,13 +5,12 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/filecoin-project/specs-actors/actors/abi"
+	"github.com/filecoin-project/go-state-types/abi"
 	cid "github.com/ipfs/go-cid"
 	"github.com/urfave/cli/v2"
 
 	"github.com/filecoin-project/lotus/api"
 	"github.com/filecoin-project/lotus/build"
-	"github.com/filecoin-project/lotus/chain"
 )
 
 var syncCmd = &cli.Command{
@@ -61,7 +60,7 @@ var syncStatusCmd = &cli.Command{
 			fmt.Printf("\tBase:\t%s\n", base)
 			fmt.Printf("\tTarget:\t%s (%d)\n", target, theight)
 			fmt.Printf("\tHeight diff:\t%d\n", heightDiff)
-			fmt.Printf("\tStage: %s\n", chain.SyncStageString(ss.Stage))
+			fmt.Printf("\tStage: %s\n", ss.Stage)
 			fmt.Printf("\tHeight: %d\n", ss.Height)
 			if ss.End.IsZero() {
 				if !ss.Start.IsZero() {
@@ -180,11 +179,13 @@ func SyncWait(ctx context.Context, napi api.FullNode) error {
 		ss := state.ActiveSyncs[working]
 
 		var target []cid.Cid
+		var theight abi.ChainEpoch
 		if ss.Target != nil {
 			target = ss.Target.Cids()
+			theight = ss.Target.Height()
 		}
 
-		fmt.Printf("\r\x1b[2KWorker %d: Target: %s\tState: %s\tHeight: %d", working, target, chain.SyncStageString(ss.Stage), ss.Height)
+		fmt.Printf("\r\x1b[2KWorker %d: Target Height: %d\tTarget: %s\tState: %s\tHeight: %d", working, theight, target, ss.Stage, ss.Height)
 
 		if time.Now().Unix()-int64(head.MinTimestamp()) < int64(build.BlockDelaySecs) {
 			fmt.Println("\nDone!")
@@ -195,7 +196,7 @@ func SyncWait(ctx context.Context, napi api.FullNode) error {
 		case <-ctx.Done():
 			fmt.Println("\nExit by user")
 			return nil
-		case <-time.After(1 * time.Second):
+		case <-build.Clock.After(1 * time.Second):
 		}
 	}
 }
